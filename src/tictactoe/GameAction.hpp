@@ -20,5 +20,5 @@ public:
 
 private:
   class GameActionImpl;
-  unique_ptr<GameActionImpl> impl;
+  uptr<GameActionImpl> impl;
 };

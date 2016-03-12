@@ -95,6 +95,8 @@ private:
   }
 
   uptr<Action> chooseActionForState(State *state) {
+    // epsilon-greedy multi-armed bandit policy.
+
     if (Util::RandInterval(0.0, 1.0) < pRandomAction) {
       auto &sas = stateActions[state];
       unsigned index = rand() % sas.size();
@@ -122,7 +124,7 @@ private:
     stateActions[newState.get()] = vector<uptr<ActionValue>>();
     auto &actionValues(stateActions[newState.get()]);
     for (auto &action : actions) {
-      actionValues.push_back(unique_ptr<ActionValue>(new ActionValue(move(action))));
+      actionValues.push_back(make_unique<ActionValue>(move(action)));
     }
 
     ownedStates.push_back(move(newState));

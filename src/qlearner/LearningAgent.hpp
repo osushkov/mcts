@@ -21,6 +21,6 @@ public:
   void SetPRandom(double pRandom);
 
 private:
-  class LearningAgentImpl;
+  struct LearningAgentImpl;
   uptr<LearningAgentImpl> impl;
 };
