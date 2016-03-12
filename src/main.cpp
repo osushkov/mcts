@@ -1,38 +1,37 @@
 
-#include <iostream>
-#include <vector>
-#include <unordered_map>
-#include <random>
-#include <cstdlib>
-#include <ctime>
-#include <vector>
+#include "agent/Agent.hpp"
+#include "agent/IOAgent.hpp"
 #include "common/Common.hpp"
-#include "tictactoe/GameState.hpp"
+#include "qlearner/Trainer.hpp"
 #include "tictactoe/GameAction.hpp"
 #include "tictactoe/GameRules.hpp"
-#include "Agent.hpp"
-#include "IOAgent.hpp"
-#include "Trainer.hpp"
+#include "tictactoe/GameState.hpp"
 
-using namespace std;
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
+#include <random>
+#include <unordered_map>
+#include <vector>
+#include <vector>
 
 void playGameAgainst(Agent *agent) {
   GameRules rules(3);
   auto myPlayer = make_unique<IOAgent>();
 
-  vector<Agent*> players{agent, myPlayer.get()};
-  unsigned curIndex = 0; //rand()%players.size();
+  vector<Agent *> players{agent, myPlayer.get()};
+  unsigned curIndex = 0; // rand()%players.size();
 
-  uptr<State> gameState(GameState::newEmptyGameState(3, 3));
+  uptr<State> gameState(GameState::NewEmptyGameState(3, 3));
 
   while (true) {
     Agent *curPlayer = players[curIndex];
 
-    uptr<Action> action = curPlayer->chooseAction(gameState.get());
-    uptr<State> successor = gameState->successorState(*action);
+    uptr<Action> action = curPlayer->ChooseAction(gameState.get());
+    uptr<State> successor = gameState->SuccessorState(*action);
 
-    bool isWin = rules.isWin(*successor);
-    bool isFinished = rules.isTerminalState(*successor);
+    bool isWin = rules.IsWin(*successor);
+    bool isFinished = rules.IsTerminalState(*successor);
 
     if (isWin || isFinished) {
       cout << "end of game!" << endl;
@@ -41,13 +40,13 @@ void playGameAgainst(Agent *agent) {
       } else {
         cout << "its a draw" << endl;
       }
-      successor->output(cout);
+      successor->Output(cout);
 
       break;
     }
 
-    gameState = successor->clone();
-    static_cast<GameState*>(gameState.get())->flipState(); // TODO: this is a bit hacky.
+    gameState = successor->Clone();
+    static_cast<GameState *>(gameState.get())->FlipState(); // TODO: this is a bit hacky.
     curIndex = (curIndex + 1) % players.size();
   }
 }
@@ -58,9 +57,8 @@ int main() {
   cout << "starting" << endl;
 
   Trainer trainer;
-  unique_ptr<Agent> trainedAgent(trainer.trainAgent());
+  uptr<Agent> trainedAgent(trainer.TrainAgent());
 
-  trainedAgent->setPRandom(0.0);
   playGameAgainst(trainedAgent.get());
 
   cout << "finished" << endl;

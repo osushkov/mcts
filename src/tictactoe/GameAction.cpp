@@ -3,25 +3,17 @@
 #include <cassert>
 #include <iostream>
 
-using namespace std;
-
-
 struct GameAction::GameActionImpl {
   const unsigned x;
   const unsigned y;
 
-
   GameActionImpl(unsigned x, unsigned y) : x(x), y(y) {}
 
-  void apply(GameState &state) const {
-    state.placeToken(x, y);
-  }
+  void Apply(GameState &state) const { state.PlaceToken(x, y); }
 
-  bool operator== (const GameActionImpl& obj) const {
-    return x == obj.x && y == obj.y;
-  }
+  bool operator==(const GameActionImpl &obj) const { return x == obj.x && y == obj.y; }
 
-  size_t hashCode(void) const {
+  size_t HashCode(void) const {
     static const size_t MUL_CONST = 378551;
 
     size_t result = 0;
@@ -30,27 +22,19 @@ struct GameAction::GameActionImpl {
     return result;
   }
 
-  void output(std::ostream &out) const {
-    out << "GA(" << x << "," << y << ")" << endl;
-  }
-
+  void Output(std::ostream &out) const { out << "GA(" << x << "," << y << ")" << endl; }
 };
 
-GameAction::GameAction(unsigned x, unsigned y) :
-    impl(new GameActionImpl(x, y)) {}
+GameAction::GameAction(unsigned x, unsigned y) : impl(new GameActionImpl(x, y)) {}
 
 GameAction::~GameAction() = default;
 
-void GameAction::apply(GameState &state) const {
-  impl->apply(state);
-}
+void GameAction::Apply(GameState &state) const { impl->Apply(state); }
 
-uptr<Action> GameAction::clone(void) const {
-  return make_unique<GameAction>(impl->x, impl->y);
-}
+uptr<Action> GameAction::Clone(void) const { return make_unique<GameAction>(impl->x, impl->y); }
 
-bool GameAction::operator== (const Action& obj) const {
-  const GameAction *ga = dynamic_cast<const GameAction*>(&obj);
+bool GameAction::operator==(const Action &obj) const {
+  const GameAction *ga = dynamic_cast<const GameAction *>(&obj);
   if (ga == nullptr) {
     return false;
   }
@@ -58,10 +42,6 @@ bool GameAction::operator== (const Action& obj) const {
   return *impl == *ga->impl;
 }
 
-size_t GameAction::hashCode(void) const {
-  return impl->hashCode();
-}
+size_t GameAction::HashCode(void) const { return impl->HashCode(); }
 
-void GameAction::output(std::ostream &out) const {
-  impl->output(out);
-}
+void GameAction::Output(std::ostream &out) const { impl->Output(out); }

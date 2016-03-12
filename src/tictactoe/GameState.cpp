@@ -3,44 +3,38 @@
 #include "GameAction.hpp"
 #include <cassert>
 
-
 struct GameState::GameStateImpl {
 
   unsigned boardWidth;
   unsigned boardHeight;
   vector<CellState> cells;
 
-
-  GameStateImpl(unsigned width, unsigned height, const vector<CellState> &cells) :
-      boardWidth(width), boardHeight(height), cells(cells) {
+  GameStateImpl(unsigned width, unsigned height, const vector<CellState> &cells)
+      : boardWidth(width), boardHeight(height), cells(cells) {
     assert(width > 0);
     assert(height > 0);
-    assert(cells.size() == width*height);
+    assert(cells.size() == width * height);
   }
 
-  unsigned width(void) const {
-    return boardWidth;
-  }
+  unsigned Width(void) const { return boardWidth; }
 
-  unsigned height(void) const {
-    return boardHeight;
-  }
+  unsigned Height(void) const { return boardHeight; }
 
-  bool placeToken(unsigned x, unsigned y) {
+  bool PlaceToken(unsigned x, unsigned y) {
     assert(x < boardWidth && y < boardHeight);
-    assert(cells[x + y*boardWidth] == CellState::EMPTY);
+    assert(cells[x + y * boardWidth] == CellState::EMPTY);
 
-    cells[x + y*boardWidth] = CellState::MY_TOKEN;
+    cells[x + y * boardWidth] = CellState::MY_TOKEN;
     return true;
   }
 
-  CellState getCell(unsigned x, unsigned y) const {
+  CellState GetCell(unsigned x, unsigned y) const {
     assert(x < boardWidth && y < boardHeight);
-    return cells[x + y*boardWidth];
+    return cells[x + y * boardWidth];
   }
 
-  void flipState(void) {
-    for (auto& cs : cells) {
+  void FlipState(void) {
+    for (auto &cs : cells) {
       if (cs == CellState::MY_TOKEN) {
         cs = CellState::OPPONENT_TOKEN;
       } else if (cs == CellState::OPPONENT_TOKEN) {
@@ -49,10 +43,9 @@ struct GameState::GameStateImpl {
     }
   }
 
-  bool operator== (const GameStateImpl& other) const {
-    if (boardWidth != other.boardWidth
-        || boardHeight != other.boardHeight
-        || cells.size() != other.cells.size()) {
+  bool operator==(const GameStateImpl &other) const {
+    if (boardWidth != other.boardWidth || boardHeight != other.boardHeight ||
+        cells.size() != other.cells.size()) {
       return false;
     }
 
@@ -65,30 +58,30 @@ struct GameState::GameStateImpl {
     return true;
   }
 
-  size_t hashCode(void) const {
+  size_t HashCode(void) const {
     size_t result = 0;
-    for (auto& c : cells) {
+    for (auto &c : cells) {
       result *= 3;
-      result += (int) c;
+      result += (int)c;
     }
     return result;
   }
 
-  void output(std::ostream &out) const {
+  void Output(std::ostream &out) const {
     for (unsigned y = 0; y < boardHeight; y++) {
       for (unsigned x = 0; x < boardWidth; x++) {
-        out << cells[x + y*boardWidth];
+        out << cells[x + y * boardWidth];
       }
       out << endl;
     }
   }
 
-  std::vector<unique_ptr<Action>> availableActions(void) const {
-    vector<unique_ptr<Action>> result;
+  vector<uptr<Action>> AvailableActions(void) const {
+    vector<uptr<Action>> result;
 
     for (unsigned y = 0; y < boardHeight; y++) {
       for (unsigned x = 0; x < boardWidth; x++) {
-        CellState cs = cells[x + y*boardWidth];
+        CellState cs = cells[x + y * boardWidth];
         if (cs == CellState::EMPTY) {
           result.push_back(make_unique<GameAction>(x, y));
         }
@@ -98,56 +91,44 @@ struct GameState::GameStateImpl {
     return result;
   }
 
-  unique_ptr<GameState> successorState(const Action &action) const {
-    const GameAction& ga = dynamic_cast<const GameAction&>(action);
+  uptr<GameState> SuccessorState(const Action &action) const {
+    const GameAction &ga = dynamic_cast<const GameAction &>(action);
 
-    auto result = unique_ptr<GameState>(new GameState(boardWidth, boardHeight, cells));
-    ga.apply(*result);
+    auto result = make_unique<GameState>(boardWidth, boardHeight, cells);
+    ga.Apply(*result);
 
     return move(result);
   }
-
 };
 
-
-GameState* GameState::newEmptyGameState(unsigned width, unsigned height) {
+GameState *GameState::NewEmptyGameState(unsigned width, unsigned height) {
   assert(width > 0 && height > 0);
 
-  vector<CellState> cells(width*height, CellState::EMPTY);
+  vector<CellState> cells(width * height, CellState::EMPTY);
   return new GameState(width, height, cells);
 }
 
-GameState::GameState(unsigned width, unsigned height, const vector<CellState> &cells) :
-    impl(new GameStateImpl(width, height, cells)) {}
+GameState::GameState(unsigned width, unsigned height, const vector<CellState> &cells)
+    : impl(new GameStateImpl(width, height, cells)) {}
 
 GameState::~GameState() = default;
 
-unsigned GameState::width(void) const {
-  return impl->width();
+unsigned GameState::Width(void) const { return impl->Width(); }
+
+unsigned GameState::Height(void) const { return impl->Height(); }
+
+bool GameState::PlaceToken(unsigned x, unsigned y) { return impl->PlaceToken(x, y); }
+
+CellState GameState::GetCell(unsigned x, unsigned y) const { return impl->GetCell(x, y); }
+
+void GameState::FlipState(void) { impl->FlipState(); }
+
+uptr<State> GameState::Clone(void) const {
+  return make_unique<GameState>(impl->boardWidth, impl->boardHeight, impl->cells);
 }
 
-unsigned GameState::height(void) const {
-    return impl->height();
-}
-
-bool GameState::placeToken(unsigned x, unsigned y) {
-  return impl->placeToken(x, y);
-}
-
-CellState GameState::getCell(unsigned x, unsigned y) const{
-  return impl->getCell(x, y);
-}
-
-void GameState::flipState(void) {
-  impl->flipState();
-}
-
-unique_ptr<State> GameState::clone(void) const {
-  return unique_ptr<State>(new GameState(impl->boardWidth, impl->boardHeight, impl->cells));
-}
-
-bool GameState::operator== (const State& obj) const {
-  const GameState *gs = dynamic_cast<const GameState*>(&obj);
+bool GameState::operator==(const State &obj) const {
+  const GameState *gs = dynamic_cast<const GameState *>(&obj);
   if (gs == nullptr) {
     return false;
   }
@@ -155,18 +136,14 @@ bool GameState::operator== (const State& obj) const {
   return *impl == *gs->impl;
 }
 
-size_t GameState::hashCode(void) const {
-  return impl->hashCode();
+size_t GameState::HashCode(void) const { return impl->HashCode(); }
+
+void GameState::Output(std::ostream &out) const { impl->Output(out); }
+
+std::vector<uptr<Action>> GameState::AvailableActions(void) const {
+  return impl->AvailableActions();
 }
 
-void GameState::output(std::ostream &out) const {
-  impl->output(out);
-}
-
-std::vector<unique_ptr<Action>> GameState::availableActions(void) const {
-  return impl->availableActions();
-}
-
-unique_ptr<State> GameState::successorState(const Action &action) const {
-  return impl->successorState(action);
+uptr<State> GameState::SuccessorState(const Action &action) const {
+  return impl->SuccessorState(action);
 }

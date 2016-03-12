@@ -2,20 +2,18 @@
 #include "GameRules.hpp"
 #include <cassert>
 
-
 class GameRules::GameRulesImpl {
   const unsigned completionRun;
 
 public:
-  GameRulesImpl(unsigned completionRun) :
-      completionRun(completionRun) {
+  GameRulesImpl(unsigned completionRun) : completionRun(completionRun) {
     assert(completionRun > 0);
   }
 
-  bool isTerminalState(const GameState &state) const {
-    for (unsigned y = 0; y < state.height(); y++) {
-      for (unsigned x = 0; x < state.width(); x++) {
-        if (state.getCell(x, y) == CellState::EMPTY) {
+  bool IsTerminalState(const GameState &state) const {
+    for (unsigned y = 0; y < state.Height(); y++) {
+      for (unsigned x = 0; x < state.Width(); x++) {
+        if (state.GetCell(x, y) == CellState::EMPTY) {
           return false;
         }
       }
@@ -24,21 +22,19 @@ public:
     return true;
   }
 
-  bool isWin(const GameState &state) const {
-    return haveVerticalRun(state, completionRun) ||
-        haveHorizontalRun(state, completionRun) ||
-        haveDiagonalRun(state, completionRun);
+  bool IsWin(const GameState &state) const {
+    return haveVerticalRun(state, completionRun) || haveHorizontalRun(state, completionRun) ||
+           haveDiagonalRun(state, completionRun);
   }
 
 private:
-
   bool haveVerticalRun(const GameState &state, unsigned length) const {
-    for (unsigned y = 0; y < state.height() - length + 1; y++) {
-      for (unsigned x = 0; x < state.width(); x++) {
+    for (unsigned y = 0; y < state.Height() - length + 1; y++) {
+      for (unsigned x = 0; x < state.Width(); x++) {
 
         bool found = true;
         for (unsigned i = 0; i < length; i++) {
-          if (state.getCell(x, y+i) != CellState::MY_TOKEN) {
+          if (state.GetCell(x, y + i) != CellState::MY_TOKEN) {
             found = false;
             break;
           }
@@ -54,12 +50,12 @@ private:
   }
 
   bool haveHorizontalRun(const GameState &state, unsigned length) const {
-    for (unsigned y = 0; y < state.height(); y++) {
-      for (unsigned x = 0; x < state.width() - length + 1; x++) {
+    for (unsigned y = 0; y < state.Height(); y++) {
+      for (unsigned x = 0; x < state.Width() - length + 1; x++) {
 
         bool found = true;
         for (unsigned i = 0; i < length; i++) {
-          if (state.getCell(x+i, y) != CellState::MY_TOKEN) {
+          if (state.GetCell(x + i, y) != CellState::MY_TOKEN) {
             found = false;
             break;
           }
@@ -75,11 +71,11 @@ private:
   }
 
   bool haveDiagonalRun(const GameState &state, unsigned length) const {
-    for (unsigned y = 0; y < state.height() - length + 1; y++) {
-      for (unsigned x = 0; x < state.width() - length + 1; x++) {
+    for (unsigned y = 0; y < state.Height() - length + 1; y++) {
+      for (unsigned x = 0; x < state.Width() - length + 1; x++) {
         bool found = true;
         for (unsigned i = 0; i < length; i++) {
-          if (state.getCell(x+i, y+i) != CellState::MY_TOKEN) {
+          if (state.GetCell(x + i, y + i) != CellState::MY_TOKEN) {
             found = false;
             break;
           }
@@ -91,11 +87,11 @@ private:
       }
     }
 
-    for (unsigned y = 0; y < state.height() - length + 1; y++) {
-      for (unsigned x = length - 1; x < state.width(); x++) {
+    for (unsigned y = 0; y < state.Height() - length + 1; y++) {
+      for (unsigned x = length - 1; x < state.Width(); x++) {
         bool found = true;
         for (unsigned i = 0; i < length; i++) {
-          if (state.getCell(x-i, y+i) != CellState::MY_TOKEN) {
+          if (state.GetCell(x - i, y + i) != CellState::MY_TOKEN) {
             found = false;
             break;
           }
@@ -109,21 +105,18 @@ private:
 
     return false;
   }
-
 };
 
-
-GameRules::GameRules(unsigned completionRun) :
-    impl(new GameRulesImpl(completionRun)) {}
+GameRules::GameRules(unsigned completionRun) : impl(new GameRulesImpl(completionRun)) {}
 
 GameRules::~GameRules() = default;
 
-bool GameRules::isTerminalState(const State &state) const {
-  auto gs = static_cast<const GameState*>(&state);
-  return impl->isTerminalState(*gs);
+bool GameRules::IsTerminalState(const State &state) const {
+  auto gs = static_cast<const GameState *>(&state);
+  return impl->IsTerminalState(*gs);
 }
 
-bool GameRules::isWin(const State &state) const {
-  auto gs = static_cast<const GameState*>(&state);
-  return impl->isWin(*gs);
+bool GameRules::IsWin(const State &state) const {
+  auto gs = static_cast<const GameState *>(&state);
+  return impl->IsWin(*gs);
 }

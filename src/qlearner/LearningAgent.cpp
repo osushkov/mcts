@@ -1,12 +1,11 @@
 
 #include "LearningAgent.hpp"
-#include "util/Util.hpp"
-#include <unordered_map>
-#include <random>
-#include <iostream>
+#include "../util/Util.hpp"
 #include <cassert>
 #include <cstdlib>
-
+#include <iostream>
+#include <random>
+#include <unordered_map>
 
 static double randomInitialValue(void) {
   static mt19937 gen;
@@ -15,15 +14,13 @@ static double randomInitialValue(void) {
 }
 
 struct ActionValue {
-  unique_ptr<Action> action;
+  uptr<Action> action;
   double value;
 
-  ActionValue(unique_ptr<Action> action, double value) :
-      action(move(action)), value(value) {}
+  ActionValue(uptr<Action> action, double value) : action(move(action)), value(value) {}
 
-  ActionValue(unique_ptr<Action> action) : ActionValue(move(action), randomInitialValue()) {}
+  ActionValue(uptr<Action> action) : ActionValue(move(action), randomInitialValue()) {}
 };
-
 
 struct LearningAgent::LearningAgentImpl {
 
@@ -32,19 +29,19 @@ struct LearningAgent::LearningAgentImpl {
 
   double pRandomAction;
 
-  unordered_map<State*, vector<unique_ptr<ActionValue>>, hash<State*>, State::StatePEquals> stateActions;
+  unordered_map<State *, vector<uptr<ActionValue>>, hash<State *>, State::StatePEquals>
+      stateActions;
 
   // This is here mainly because I dont think you can use unique_ptr as a key in the map easily.
-  vector<unique_ptr<State>> ownedStates;
+  vector<uptr<State>> ownedStates;
 
-
-  LearningAgentImpl(double futureDiscount) :
-      futureDiscount(futureDiscount), learnRate(0.5), pRandomAction(0.2) {
+  LearningAgentImpl(double futureDiscount)
+      : futureDiscount(futureDiscount), learnRate(0.5), pRandomAction(0.2) {
     assert(futureDiscount >= 0.0 && futureDiscount <= 1.0);
     assert(learnRate >= 0.0 && learnRate <= 1.0);
   }
 
-  uptr<Action> chooseAction(State* state) {
+  uptr<Action> ChooseAction(State *state) {
     if (!haveSeenState(state)) {
       handleNewState(state);
     }
@@ -52,7 +49,7 @@ struct LearningAgent::LearningAgentImpl {
     return chooseActionForState(state);
   }
 
-  void actionOutcome(pair<State*, Action*> performed, pair<State*, double> outcome) {
+  void ActionOutcome(pair<State *, Action *> performed, pair<State *, double> outcome) {
     State *startState = performed.first;
     Action *actionPerformed = performed.second;
 
@@ -73,9 +70,8 @@ struct LearningAgent::LearningAgentImpl {
   }
 
 private:
-
-  ActionValue* findActionValue(State *state, Action *action) {
-    for (auto& av : stateActions[state]) {
+  ActionValue *findActionValue(State *state, Action *action) {
+    for (auto &av : stateActions[state]) {
       if (*av->action == *action) {
         return av.get();
       }
@@ -88,9 +84,9 @@ private:
     double result = 0.0;
     bool haveResult = false;
 
-    for (auto& av : stateActions[state]) {
+    for (auto &av : stateActions[state]) {
       if (!haveResult || av->value > result) {
-        result =  av->value;
+        result = av->value;
         haveResult = true;
       }
     }
@@ -99,16 +95,16 @@ private:
   }
 
   uptr<Action> chooseActionForState(State *state) {
-    if (Util::randInterval(0.0, 1.0) < pRandomAction) {
-      auto& sas = stateActions[state];
+    if (Util::RandInterval(0.0, 1.0) < pRandomAction) {
+      auto &sas = stateActions[state];
       unsigned index = rand() % sas.size();
-      return sas[index]->action->clone();
+      return sas[index]->action->Clone();
     }
 
     double bestValue;
     Action *bestAction = nullptr;
 
-    for (auto& av : stateActions[state]) {
+    for (auto &av : stateActions[state]) {
       if (bestAction == nullptr || av->value > bestValue) {
         bestValue = av->value;
         bestAction = av->action.get();
@@ -116,47 +112,42 @@ private:
     }
 
     assert(bestAction != nullptr);
-    return bestAction->clone();
+    return bestAction->Clone();
   }
 
-  void handleNewState(State* state) {
-    unique_ptr<State> newState(state->clone());
-    vector<unique_ptr<Action>> actions(newState->availableActions());
+  void handleNewState(State *state) {
+    uptr<State> newState(state->Clone());
+    vector<uptr<Action>> actions(newState->AvailableActions());
 
-    stateActions[newState.get()] = vector<unique_ptr<ActionValue>>();
-    auto& actionValues(stateActions[newState.get()]);
-    for (auto& action : actions) {
+    stateActions[newState.get()] = vector<uptr<ActionValue>>();
+    auto &actionValues(stateActions[newState.get()]);
+    for (auto &action : actions) {
       actionValues.push_back(unique_ptr<ActionValue>(new ActionValue(move(action))));
     }
 
     ownedStates.push_back(move(newState));
   }
 
-  bool haveSeenState(State* state) {
+  bool haveSeenState(State *state) {
     assert(state != nullptr);
     return stateActions.count(state) > 0;
   }
 };
 
-
-LearningAgent::LearningAgent(double futureDiscount) :
-    impl(new LearningAgentImpl(futureDiscount)) {}
+LearningAgent::LearningAgent(double futureDiscount) : impl(new LearningAgentImpl(futureDiscount)) {}
 
 LearningAgent::~LearningAgent() = default;
 
-uptr<Action> LearningAgent::chooseAction(State* state) {
-  return impl->chooseAction(state);
+uptr<Action> LearningAgent::ChooseAction(State *state) { return impl->ChooseAction(state); }
+
+void LearningAgent::ActionOutcome(pair<State *, Action *> performed,
+                                  pair<State *, double> outcome) {
+  impl->ActionOutcome(performed, outcome);
 }
 
-void LearningAgent::actionOutcome(pair<State*, Action*> performed, pair<State*, double> outcome) {
-  impl->actionOutcome(performed, outcome);
-}
-
-void LearningAgent::setLearnRate(double learnRate) {
+void LearningAgent::SetLearnRate(double learnRate) {
   assert(learnRate >= 0.0 && learnRate <= 1.0);
   impl->learnRate = learnRate;
 }
 
-void LearningAgent::setPRandom(double pRandom) {
-  impl->pRandomAction = pRandom;
-}
+void LearningAgent::SetPRandom(double pRandom) { impl->pRandomAction = pRandom; }

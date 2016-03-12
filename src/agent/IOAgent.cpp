@@ -1,12 +1,11 @@
 
 #include "IOAgent.hpp"
-#include "tictactoe/GameAction.hpp"
-#include <vector>
+#include "../tictactoe/GameAction.hpp"
 #include <iostream>
-
+#include <vector>
 
 static bool isActionInSet(Action *action, const vector<uptr<Action>> &available) {
-  for (auto& av : available) {
+  for (auto &av : available) {
     if (*action == *av.get()) {
       return true;
     }
@@ -14,10 +13,10 @@ static bool isActionInSet(Action *action, const vector<uptr<Action>> &available)
   return false;
 }
 
-uptr<Action> IOAgent::chooseAction(State* state) {
-  state->output(cout);
+uptr<Action> IOAgent::ChooseAction(State *state) {
+  state->Output(cout);
   cout << "your move:" << endl;
-  vector<uptr<Action>> available = state->availableActions();
+  vector<uptr<Action>> available = state->AvailableActions();
 
   while (true) {
     unsigned x, y;
@@ -26,7 +25,7 @@ uptr<Action> IOAgent::chooseAction(State* state) {
     auto pa = make_unique<GameAction>(x, y);
 
     if (isActionInSet(pa.get(), available)) {
-      pa->output(cout);
+      pa->Output(cout);
       return move(pa);
     } else {
       cout << "invalid move" << endl;
@@ -35,7 +34,3 @@ uptr<Action> IOAgent::chooseAction(State* state) {
 
   return nullptr;
 }
-
-void IOAgent::actionOutcome(pair<State*, Action*> performed, pair<State*, double> outcome) {}
-void IOAgent::setLearnRate(double learnRate) {}
-void IOAgent::setPRandom(double pRandom) {}

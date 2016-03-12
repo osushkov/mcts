@@ -1,48 +1,39 @@
 
 #pragma once
 
+#include "../common/Common.hpp"
 #include "../common/State.hpp"
 #include "CellState.hpp"
-#include <memory>
 #include <vector>
-
-using namespace std;
-
 
 class GameState : public State {
 public:
-
   // Create a game state with an empty board.
-  static GameState* newEmptyGameState(unsigned width, unsigned height);
+  // TODO: this should return a uptr!
+  static GameState *NewEmptyGameState(unsigned width, unsigned height);
 
   GameState(unsigned width, unsigned height, const vector<CellState> &cells);
   virtual ~GameState();
 
-  unsigned width(void) const;
-  unsigned height(void) const;
+  unsigned Width(void) const;
+  unsigned Height(void) const;
 
-  bool placeToken(unsigned x, unsigned y);
-  CellState getCell(unsigned x, unsigned y) const;
-  void flipState(void);
+  bool PlaceToken(unsigned x, unsigned y);
+  CellState GetCell(unsigned x, unsigned y) const;
 
-  unique_ptr<State> clone(void) const override;
-  bool operator== (const State& obj) const override;
-  size_t hashCode() const override;
-  void output(std::ostream &out) const override;
+  // Whenever we make a move and want another agent to make a move, then we should "flip" the
+  // board such that what are currently "our" tokens become "oppponent" tokens, and vice versa.
+  void FlipState(void);
 
-  vector<unique_ptr<Action>> availableActions(void) const override;
-  unique_ptr<State> successorState(const Action &action) const override;
+  uptr<State> Clone(void) const override;
+  bool operator==(const State &obj) const override;
+  size_t HashCode() const override;
+  void Output(std::ostream &out) const override;
+
+  vector<uptr<Action>> AvailableActions(void) const override;
+  uptr<State> SuccessorState(const Action &action) const override;
 
 private:
   class GameStateImpl;
-  unique_ptr<GameStateImpl> impl;
+  uptr<GameStateImpl> impl;
 };
-
-// namespace std {
-// template<>
-// struct hash<GameState*> {
-//   size_t operator()(GameState const *gs) const {
-//     return gs->hashCode();
-//   }
-// };
-// }
