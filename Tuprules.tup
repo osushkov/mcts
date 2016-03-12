@@ -1,0 +1,17 @@
+CC = g++
+
+CCFLAGS += -std=c++1y
+CCFLAGS += -I/usr/local/include
+CCFLAGS += -Wall
+
+ifdef RELEASE
+  CCFLAGS += -O3
+  CUDAFLAGS += -O3
+endif
+
+ifdef DEBUG
+  CCFLAGS += -g
+endif
+
+CLFLAGS += -L/usr/local/lib
+CLFLAGS += -lpthread
