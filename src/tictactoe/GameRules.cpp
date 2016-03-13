@@ -2,10 +2,9 @@
 #include "GameRules.hpp"
 #include <cassert>
 
-class GameRules::GameRulesImpl {
+struct GameRules::GameRulesImpl {
   const unsigned completionRun;
 
-public:
   GameRulesImpl(unsigned completionRun) : completionRun(completionRun) {
     assert(completionRun > 0);
   }
@@ -108,6 +107,8 @@ private:
 };
 
 GameRules::GameRules(unsigned completionRun) : impl(new GameRulesImpl(completionRun)) {}
+
+GameRules::GameRules(const GameRules &other) : impl(new GameRulesImpl(other.impl->completionRun)) {}
 
 GameRules::~GameRules() = default;
 

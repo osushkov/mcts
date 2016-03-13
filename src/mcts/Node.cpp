@@ -4,19 +4,30 @@
 #include "../util/Util.hpp"
 #include <cassert>
 
-Node::Node(Node *parent, uptr<State> state, unsigned playerIndex)
-    : parent(parent), state(move(state)), playerIndex(playerIndex), isLeaf(true), totalTrials(0),
-      sumUtility(0.0) {}
+Node::Node(uptr<State> state, unsigned playerIndex)
+    : state(move(state)), playerIndex(playerIndex), isLeaf(true), totalTrials(0), sumUtility(0.0) {}
 
 bool Node::IsLeaf(void) const { return isLeaf; }
 
 unsigned Node::PlayerIndex(void) const { return playerIndex; }
 
+State *Node::GetState(void) const { return state.get(); }
+
+vector<pair<Action *, double>> Node::GetActionUtilities(void) const {
+  vector<pair<Action *, double>> result;
+  for (const auto &edge : children) {
+    result.push_back(make_pair(edge.first.get(), edge.second->ExpectedUtility(playerIndex)));
+  }
+  return result;
+}
+
 Node *Node::Expand(void) {
   assert(isLeaf);
 
   vector<uptr<Action>> available = nonExpandedActions();
-  assert(!available.empty());
+  if (available.empty()) { // This can happen at a terminal game state.
+    return nullptr;
+  }
 
   if (available.size() == 1) {
     isLeaf = false;
@@ -28,9 +39,7 @@ Node *Node::Expand(void) {
   // TODO: this is a bit hacky. I should maybe move this into State
   static_cast<GameState *>(childState.get())->FlipState();
 
-  children.emplace_back(move(chosenAction),
-                        make_unique<Node>(this, move(childState), 1 - playerIndex));
-
+  children.emplace_back(move(chosenAction), make_unique<Node>(move(childState), 1 - playerIndex));
   return children.back().second.get();
 }
 
@@ -43,12 +52,12 @@ Node *Node::Select(double pRandom) {
     return children[rand() % children.size()].second.get();
   } else {
     Node *result = nullptr;
-    double bestWinningChance = 0.0;
+    double bestUtility = 0.0;
 
     for (auto &edge : children) {
-      double winChance = edge.second->PWin(this->playerIndex);
-      if (winChance > bestWinningChance) {
-        bestWinningChance = winChance;
+      double utility = edge.second->ExpectedUtility(this->playerIndex);
+      if (utility > bestUtility) {
+        bestUtility = utility;
         result = edge.second.get();
       }
     }
@@ -81,17 +90,16 @@ vector<uptr<Action>> Node::nonExpandedActions(void) {
       result.push_back(move(sa));
     }
   }
-
   return result;
 }
 
-double Node::PWin(unsigned playerIndex) const {
+double Node::ExpectedUtility(unsigned playerIndex) const {
   assert(totalTrials > 0);
 
   double p = sumUtility / totalTrials;
   if (this->playerIndex == playerIndex) {
     return p;
   } else {
-    return 1.0 - p;
+    return -p;
   }
 }
