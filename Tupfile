@@ -1,2 +1,9 @@
 include_rules
-: src/*.o src/tictactoe/tictactoe.a src/qlearner/qlearner.a src/agent/agent.a src/util/util.a |> $(CC) %f -o %o $(CLFLAGS) |> mcts
+
+: src/*.o \
+src/tictactoe/tictactoe.a \
+src/qlearner/qlearner.a \
+src/mcts/mcts.a \
+src/agent/agent.a \
+src/util/util.a \
+|> $(CC) %f -o %o $(CLFLAGS) |> mcts
