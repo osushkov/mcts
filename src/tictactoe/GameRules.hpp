@@ -15,6 +15,7 @@ public:
 
   bool IsTerminalState(const State &state) const override;
   bool IsWin(const State &state) const override;
+  bool IsLoss(const State &state) const override;
 
 private:
   struct GameRulesImpl;

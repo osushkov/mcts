@@ -56,7 +56,7 @@ Node *Node::Select(double pRandom) {
 
     for (auto &edge : children) {
       double utility = edge.second->ExpectedUtility(this->playerIndex);
-      if (utility > bestUtility) {
+      if (result == nullptr || utility > bestUtility) {
         bestUtility = utility;
         result = edge.second.get();
       }

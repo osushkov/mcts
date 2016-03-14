@@ -10,6 +10,10 @@ struct GameRules::GameRulesImpl {
   }
 
   bool IsTerminalState(const GameState &state) const {
+    if (IsWin(state) || IsLoss(state)) {
+      return true;
+    }
+
     for (unsigned y = 0; y < state.Height(); y++) {
       for (unsigned x = 0; x < state.Width(); x++) {
         if (state.GetCell(x, y) == CellState::EMPTY) {
@@ -22,18 +26,25 @@ struct GameRules::GameRulesImpl {
   }
 
   bool IsWin(const GameState &state) const {
-    return haveVerticalRun(state, completionRun) || haveHorizontalRun(state, completionRun) ||
-           haveDiagonalRun(state, completionRun);
+    return haveVerticalRun(state, completionRun, CellState::MY_TOKEN) ||
+           haveHorizontalRun(state, completionRun, CellState::MY_TOKEN) ||
+           haveDiagonalRun(state, completionRun, CellState::MY_TOKEN);
+  }
+
+  bool IsLoss(const GameState &state) const {
+    return haveVerticalRun(state, completionRun, CellState::OPPONENT_TOKEN) ||
+           haveHorizontalRun(state, completionRun, CellState::OPPONENT_TOKEN) ||
+           haveDiagonalRun(state, completionRun, CellState::OPPONENT_TOKEN);
   }
 
 private:
-  bool haveVerticalRun(const GameState &state, unsigned length) const {
+  bool haveVerticalRun(const GameState &state, unsigned length, CellState targetToken) const {
     for (unsigned y = 0; y < state.Height() - length + 1; y++) {
       for (unsigned x = 0; x < state.Width(); x++) {
 
         bool found = true;
         for (unsigned i = 0; i < length; i++) {
-          if (state.GetCell(x, y + i) != CellState::MY_TOKEN) {
+          if (state.GetCell(x, y + i) != targetToken) {
             found = false;
             break;
           }
@@ -48,13 +59,13 @@ private:
     return false;
   }
 
-  bool haveHorizontalRun(const GameState &state, unsigned length) const {
+  bool haveHorizontalRun(const GameState &state, unsigned length, CellState targetToken) const {
     for (unsigned y = 0; y < state.Height(); y++) {
       for (unsigned x = 0; x < state.Width() - length + 1; x++) {
 
         bool found = true;
         for (unsigned i = 0; i < length; i++) {
-          if (state.GetCell(x + i, y) != CellState::MY_TOKEN) {
+          if (state.GetCell(x + i, y) != targetToken) {
             found = false;
             break;
           }
@@ -69,12 +80,12 @@ private:
     return false;
   }
 
-  bool haveDiagonalRun(const GameState &state, unsigned length) const {
+  bool haveDiagonalRun(const GameState &state, unsigned length, CellState targetToken) const {
     for (unsigned y = 0; y < state.Height() - length + 1; y++) {
       for (unsigned x = 0; x < state.Width() - length + 1; x++) {
         bool found = true;
         for (unsigned i = 0; i < length; i++) {
-          if (state.GetCell(x + i, y + i) != CellState::MY_TOKEN) {
+          if (state.GetCell(x + i, y + i) != targetToken) {
             found = false;
             break;
           }
@@ -90,7 +101,7 @@ private:
       for (unsigned x = length - 1; x < state.Width(); x++) {
         bool found = true;
         for (unsigned i = 0; i < length; i++) {
-          if (state.GetCell(x - i, y + i) != CellState::MY_TOKEN) {
+          if (state.GetCell(x - i, y + i) != targetToken) {
             found = false;
             break;
           }
@@ -101,7 +112,6 @@ private:
         }
       }
     }
-
     return false;
   }
 };
@@ -120,4 +130,9 @@ bool GameRules::IsTerminalState(const State &state) const {
 bool GameRules::IsWin(const State &state) const {
   auto gs = static_cast<const GameState *>(&state);
   return impl->IsWin(*gs);
+}
+
+bool GameRules::IsLoss(const State &state) const {
+  auto gs = static_cast<const GameState *>(&state);
+  return impl->IsLoss(*gs);
 }

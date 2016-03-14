@@ -12,4 +12,7 @@ public:
 
   // Returns whether the current actor has won the game.
   virtual bool IsWin(const State &state) const = 0;
+
+  // Returns whether the current actor has lost the game.
+  virtual bool IsLoss(const State &state) const = 0;
 };

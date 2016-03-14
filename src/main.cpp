@@ -2,6 +2,7 @@
 #include "agent/Agent.hpp"
 #include "agent/IOAgent.hpp"
 #include "common/Common.hpp"
+#include "mcts/MCTSAgent.hpp"
 #include "qlearner/Trainer.hpp"
 #include "tictactoe/GameAction.hpp"
 #include "tictactoe/GameRules.hpp"
@@ -56,10 +57,13 @@ int main() {
 
   cout << "starting" << endl;
 
-  Trainer trainer;
-  uptr<Agent> trainedAgent(trainer.TrainAgent());
+  MCTSAgent mctsAgent;
+  playGameAgainst(&mctsAgent);
 
-  playGameAgainst(trainedAgent.get());
+  // Trainer trainer;
+  // uptr<Agent> trainedAgent(trainer.TrainAgent());
+  //
+  // playGameAgainst(trainedAgent.get());
 
   cout << "finished" << endl;
 
