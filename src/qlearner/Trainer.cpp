@@ -11,7 +11,7 @@
 
 struct Trainer::TrainerImpl {
 
-  const unsigned numRounds = 10000;
+  const unsigned numRounds = 100000;
 
   const double startLearnRate = 0.5;
   const double endLearnRate = 0.001;
@@ -24,7 +24,7 @@ struct Trainer::TrainerImpl {
 
   const GameRules rules;
 
-  TrainerImpl() : rules(3) {}
+  TrainerImpl() : rules(4) {}
 
   uptr<Agent> TrainAgent(void) {
     auto trainedAgent = make_unique<LearningAgent>(0.9);
@@ -53,7 +53,7 @@ private:
     unsigned curIndex = rand() % players.size();
 
     // TODO: take in a factory that creates a new empty state.
-    uptr<State> gameState(GameState::NewEmptyGameState(3, 3));
+    uptr<State> gameState(GameState::NewEmptyGameState(4, 4));
     pair<uptr<State>, uptr<Action>> prevPerformed(nullptr, nullptr);
 
     unsigned turns = 0;

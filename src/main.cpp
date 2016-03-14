@@ -16,14 +16,13 @@
 #include <vector>
 #include <vector>
 
-void playGameAgainst(Agent *agent) {
-  GameRules rules(3);
-  auto myPlayer = make_unique<IOAgent>();
+void playGameAgainst(Agent *agent0, Agent *agent1) {
+  GameRules rules(4);
 
-  vector<Agent *> players{agent, myPlayer.get()};
+  vector<Agent *> players{agent1, agent0};
   unsigned curIndex = 0; // rand()%players.size();
 
-  uptr<State> gameState(GameState::NewEmptyGameState(3, 3));
+  uptr<State> gameState(GameState::NewEmptyGameState(4, 4));
 
   while (true) {
     Agent *curPlayer = players[curIndex];
@@ -53,17 +52,20 @@ void playGameAgainst(Agent *agent) {
 }
 
 int main() {
-  // srand(time(NULL));
+  srand(time(NULL));
 
   cout << "starting" << endl;
 
-  MCTSAgent mctsAgent;
-  playGameAgainst(&mctsAgent);
+  // Play againt an MCTSAgent from the command line.
+  // MCTSAgent mctsAgent;
+  // IOAgent ioAgent;
+  // playGameAgainst(&mctsAgent, &ioAgent);
 
-  // Trainer trainer;
-  // uptr<Agent> trainedAgent(trainer.TrainAgent());
-  //
-  // playGameAgainst(trainedAgent.get());
+  // MCTS Agent vs Q-learning agent.
+  Trainer trainer;
+  uptr<Agent> trainedAgent(trainer.TrainAgent());
+  MCTSAgent mctsAgent;
+  playGameAgainst(&mctsAgent, trainedAgent.get());
 
   cout << "finished" << endl;
 
