@@ -3,7 +3,7 @@
 #include "Node.hpp"
 
 static const double P_RANDOM = 0.2;
-static const unsigned MC_ITER = 10000;
+static const unsigned MC_ITER = 1000;
 
 struct MCTS::MCTSImpl {
   GameRules rules;

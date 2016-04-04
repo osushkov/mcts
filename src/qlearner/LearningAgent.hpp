@@ -18,7 +18,7 @@ public:
 
   void ActionOutcome(pair<State *, Action *> performed, pair<State *, double> outcome);
   void SetLearnRate(double learnRate);
-  void SetPRandom(double pRandom);
+  void SetTemperature(double t);
 
 private:
   struct LearningAgentImpl;

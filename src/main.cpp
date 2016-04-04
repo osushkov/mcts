@@ -4,6 +4,7 @@
 #include "common/Common.hpp"
 #include "mcts/MCTSAgent.hpp"
 #include "qlearner/Trainer.hpp"
+#include "qlearner/TrainerMcts.hpp"
 #include "tictactoe/GameAction.hpp"
 #include "tictactoe/GameRules.hpp"
 #include "tictactoe/GameState.hpp"
@@ -62,7 +63,7 @@ int main() {
   // playGameAgainst(&mctsAgent, &ioAgent);
 
   // MCTS Agent vs Q-learning agent.
-  Trainer trainer;
+  TrainerMcts trainer;
   uptr<Agent> trainedAgent(trainer.TrainAgent());
   MCTSAgent mctsAgent;
   playGameAgainst(&mctsAgent, trainedAgent.get());

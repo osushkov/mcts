@@ -19,7 +19,7 @@ struct ActionValue {
 
   ActionValue(uptr<Action> action, double value) : action(move(action)), value(value) {}
 
-  ActionValue(uptr<Action> action) : ActionValue(move(action), randomInitialValue()) {}
+  ActionValue(uptr<Action> action) : ActionValue(move(action), 0.5) {}
 };
 
 struct LearningAgent::LearningAgentImpl {
@@ -27,7 +27,7 @@ struct LearningAgent::LearningAgentImpl {
   double futureDiscount;
   double learnRate;
 
-  double pRandomAction;
+  double temperature; // Botzmann temperature
 
   unordered_map<State *, vector<uptr<ActionValue>>, hash<State *>, State::StatePEquals>
       stateActions;
@@ -36,7 +36,7 @@ struct LearningAgent::LearningAgentImpl {
   vector<uptr<State>> ownedStates;
 
   LearningAgentImpl(double futureDiscount)
-      : futureDiscount(futureDiscount), learnRate(0.5), pRandomAction(0.2) {
+      : futureDiscount(futureDiscount), learnRate(0.5), temperature(0.0) {
     assert(futureDiscount >= 0.0 && futureDiscount <= 1.0);
     assert(learnRate >= 0.0 && learnRate <= 1.0);
   }
@@ -95,14 +95,41 @@ private:
   }
 
   uptr<Action> chooseActionForState(State *state) {
-    // epsilon-greedy multi-armed bandit policy.
-
-    if (Util::RandInterval(0.0, 1.0) < pRandomAction) {
-      auto &sas = stateActions[state];
-      unsigned index = rand() % sas.size();
-      return sas[index]->action->Clone();
+    if (temperature < 0.00001) {
+      return chooseGreedy(state);
     }
 
+    // Boltzmann softmax
+    auto &sas = stateActions[state];
+
+    double sum = 0.0;
+    vector<double> ps;
+    for (auto &av : sas) {
+      ps.push_back(exp(av->value / temperature));
+      sum += ps.back();
+    }
+
+    double offset = 0.0;
+    for (unsigned i = 0; i < ps.size(); i++) {
+      double r = ps[i] / sum;
+      ps[i] = r + offset;
+      offset += r;
+
+      assert(offset <= 1.1);
+      assert(ps[i] >= 0.0 && ps[i] <= 1.1);
+    }
+
+    double rs = Util::RandInterval(0.0, 1.0);
+    for (unsigned i = 0; i < ps.size() - 1; i++) {
+      if (ps[i + 1] >= rs) {
+        return sas[i]->action->Clone();
+      }
+    }
+
+    return sas.back()->action->Clone();
+  }
+
+  uptr<Action> chooseGreedy(State *state) {
     double bestValue;
     Action *bestAction = nullptr;
 
@@ -152,4 +179,10 @@ void LearningAgent::SetLearnRate(double learnRate) {
   impl->learnRate = learnRate;
 }
 
-void LearningAgent::SetPRandom(double pRandom) { impl->pRandomAction = pRandom; }
+void LearningAgent::SetTemperature(double t) {
+  if (t < 0.01) {
+    impl->temperature = 0.0;
+  } else {
+    impl->temperature = 0.01;
+  }
+}

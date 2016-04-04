@@ -1,7 +1,8 @@
 
-#include "Trainer.hpp"
+#include "TrainerMcts.hpp"
 #include "../agent/RandomAgent.hpp"
 #include "../common/Common.hpp"
+#include "../mcts/MCTSAgent.hpp"
 #include "../tictactoe/GameRules.hpp"
 #include "../tictactoe/GameState.hpp"
 #include "../util/Util.hpp"
@@ -9,9 +10,9 @@
 #include <cassert>
 #include <cmath>
 
-struct Trainer::TrainerImpl {
+struct TrainerMcts::TrainerMctsImpl {
 
-  const unsigned numRounds = 1000000;
+  const unsigned numRounds = 10000;
 
   const double startLearnRate = 0.75;
   const double endLearnRate = 0.001;
@@ -24,21 +25,21 @@ struct Trainer::TrainerImpl {
 
   const GameRules rules;
 
-  TrainerImpl() : rules(4) {}
+  TrainerMctsImpl() : rules(4) {}
 
   uptr<Agent> TrainAgent(void) {
     auto trainedAgent = make_unique<LearningAgent>(0.9);
-    auto opponent = make_unique<LearningAgent>(0.9);
+    auto opponent = make_unique<MCTSAgent>();
 
     for (unsigned round = 0; round < numRounds; round++) {
+      if (round % 100 == 0) {
+        cout << "round: " << round << endl;
+      }
       double roundFrac = (double)round / (double)numRounds;
       double learnRate = startLearnRate + roundFrac * (endLearnRate - startLearnRate);
 
       trainedAgent->SetLearnRate(learnRate);
       trainedAgent->SetTemperature(startRandomness * (1.0 - roundFrac));
-
-      opponent->SetLearnRate(learnRate);
-      opponent->SetTemperature(startRandomness * (1.0 - roundFrac));
 
       trainingRound(trainedAgent.get(), opponent.get());
     }
@@ -48,8 +49,8 @@ struct Trainer::TrainerImpl {
   }
 
 private:
-  void trainingRound(LearningAgent *agent0, LearningAgent *agent1) {
-    vector<LearningAgent *> players{agent0, agent1};
+  void trainingRound(LearningAgent *agent0, Agent *agent1) {
+    vector<Agent *> players{agent0, agent1};
     unsigned curIndex = rand() % players.size();
 
     // TODO: take in a factory that creates a new empty state.
@@ -58,8 +59,8 @@ private:
 
     unsigned turns = 0;
     while (true) {
-      LearningAgent *curPlayer = players[curIndex];
-      LearningAgent *otherPlayer = players[(curIndex + 1) % players.size()];
+      Agent *curPlayer = players[curIndex];
+      Agent *otherPlayer = players[(curIndex + 1) % players.size()];
 
       uptr<Action> action = curPlayer->ChooseAction(gameState.get());
       uptr<State> actionApplied = gameState->SuccessorState(*action);
@@ -80,13 +81,17 @@ private:
           opponentReward = drawReward;
         }
 
-        rewardAgent(otherPlayer, prevPerformed.first.get(), prevPerformed.second.get(),
-                    successor.get(), opponentReward);
+        if (otherPlayer == agent0) {
+          rewardAgent(agent0, prevPerformed.first.get(), prevPerformed.second.get(),
+                      successor.get(), opponentReward);
+        }
       }
 
       if (isWin || isFinished) {
         double myReward = isWin ? winReward : drawReward;
-        rewardAgent(curPlayer, gameState.get(), action.get(), actionApplied.get(), myReward);
+        if (curPlayer == agent0) {
+          rewardAgent(agent0, gameState.get(), action.get(), actionApplied.get(), myReward);
+        }
 
         break;
       }
@@ -108,8 +113,8 @@ private:
   }
 };
 
-Trainer::Trainer() : impl(new TrainerImpl()) {}
+TrainerMcts::TrainerMcts() : impl(new TrainerMctsImpl()) {}
 
-Trainer::~Trainer() = default;
+TrainerMcts::~TrainerMcts() = default;
 
-uptr<Agent> Trainer::TrainAgent(void) { return impl->TrainAgent(); }
+uptr<Agent> TrainerMcts::TrainAgent(void) { return impl->TrainAgent(); }
