@@ -9,7 +9,7 @@
 
 static double randomInitialValue(void) {
   static mt19937 gen;
-  static normal_distribution<> distribution(0.0, 0.01);
+  static normal_distribution<> distribution(0.0, 0.1);
   return distribution(gen);
 }
 
@@ -19,7 +19,7 @@ struct ActionValue {
 
   ActionValue(uptr<Action> action, double value) : action(move(action)), value(value) {}
 
-  ActionValue(uptr<Action> action) : ActionValue(move(action), 0.5) {}
+  ActionValue(uptr<Action> action) : ActionValue(move(action), randomInitialValue()) {}
 };
 
 struct LearningAgent::LearningAgentImpl {
@@ -66,7 +66,9 @@ struct LearningAgent::LearningAgentImpl {
     assert(curValue != nullptr);
 
     double newQ = reward + futureDiscount * maxQ(resultState);
+    cout << "r: " << reward << " fd: " << futureDiscount << " newQ: " << newQ << endl;
     curValue->value += learnRate * (newQ - curValue->value);
+    cout << "v : " << curValue->value << endl;
   }
 
 private:
@@ -95,38 +97,12 @@ private:
   }
 
   uptr<Action> chooseActionForState(State *state) {
-    if (temperature < 0.00001) {
+    if (Util::RandInterval(0.0, 1.0) >= temperature) {
       return chooseGreedy(state);
+    } else {
+      auto &sas = stateActions[state];
+      return sas[rand()%sas.size()]->action->Clone();
     }
-
-    // Boltzmann softmax
-    auto &sas = stateActions[state];
-
-    double sum = 0.0;
-    vector<double> ps;
-    for (auto &av : sas) {
-      ps.push_back(exp(av->value / temperature));
-      sum += ps.back();
-    }
-
-    double offset = 0.0;
-    for (unsigned i = 0; i < ps.size(); i++) {
-      double r = ps[i] / sum;
-      ps[i] = r + offset;
-      offset += r;
-
-      assert(offset <= 1.1);
-      assert(ps[i] >= 0.0 && ps[i] <= 1.1);
-    }
-
-    double rs = Util::RandInterval(0.0, 1.0);
-    for (unsigned i = 0; i < ps.size() - 1; i++) {
-      if (ps[i + 1] >= rs) {
-        return sas[i]->action->Clone();
-      }
-    }
-
-    return sas.back()->action->Clone();
   }
 
   uptr<Action> chooseGreedy(State *state) {
@@ -134,6 +110,11 @@ private:
     Action *bestAction = nullptr;
 
     for (auto &av : stateActions[state]) {
+      // if (temperature < 0.001) {
+      //   av->action->Output(cout);
+      //   cout << "av: " << av->value << endl;
+      // }
+
       if (bestAction == nullptr || av->value > bestValue) {
         bestValue = av->value;
         bestAction = av->action.get();
@@ -180,9 +161,5 @@ void LearningAgent::SetLearnRate(double learnRate) {
 }
 
 void LearningAgent::SetTemperature(double t) {
-  if (t < 0.01) {
-    impl->temperature = 0.0;
-  } else {
-    impl->temperature = 0.01;
-  }
+  impl->temperature = t;
 }

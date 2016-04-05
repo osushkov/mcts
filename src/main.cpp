@@ -19,7 +19,7 @@
 void playGameAgainst(Agent *agent0, Agent *agent1) {
   GameRules* rules = GameRules::instance();
 
-  vector<Agent *> players{agent1, agent0};
+  vector<Agent *> players{agent0, agent1};
   unsigned curIndex = 0; // rand()%players.size();
 
   uptr<State> gameState = rules->InitialState();
@@ -64,6 +64,8 @@ int main() {
   // MCTS Agent vs Q-learning agent.
   Trainer trainer;
   uptr<Agent> trainedAgent(trainer.TrainAgent());
+  cout << "finished training" << endl;
+
   MCTSAgent mctsAgent;
   playGameAgainst(&mctsAgent, trainedAgent.get());
 

@@ -11,34 +11,41 @@
 
 struct Trainer::TrainerImpl {
 
-  const unsigned numRounds = 10000;
+  const unsigned numEpochs = 5;
+  const unsigned numRounds = 100000;
 
-  const double startLearnRate = 0.75;
-  const double endLearnRate = 0.001;
+  const double startLearnRate = 0.1;
+  const double endLearnRate = 0.01;
 
-  const double startRandomness = 10.0;
+  const double startRandomness = 0.2;
 
-  const double winReward = 1.0;
-  const double lossReward = -1.0;
+  const double winReward = 10.0;
+  const double lossReward = -10.0;
   const double drawReward = 0.0;
 
   TrainerImpl() = default;
 
   uptr<Agent> TrainAgent(void) {
     auto trainedAgent = make_unique<LearningAgent>(0.9);
-    auto opponent = make_unique<LearningAgent>(0.9);
+    uptr<LearningAgent> opponent = nullptr;
 
-    for (unsigned round = 0; round < numRounds; round++) {
-      double roundFrac = (double)round / (double)numRounds;
-      double learnRate = startLearnRate + roundFrac * (endLearnRate - startLearnRate);
+    for (unsigned epoch = 0; epoch < numEpochs; epoch++) {
+      cout << "epoch: " << epoch << endl;
 
-      trainedAgent->SetLearnRate(learnRate);
-      trainedAgent->SetTemperature(startRandomness * (1.0 - roundFrac));
+      opponent = move(trainedAgent);
+      opponent->SetTemperature(0.0);
 
-      opponent->SetLearnRate(learnRate);
-      opponent->SetTemperature(startRandomness * (1.0 - roundFrac));
+      trainedAgent = make_unique<LearningAgent>(0.9);
 
-      trainingRound(trainedAgent.get(), opponent.get());
+      for (unsigned round = 0; round < numRounds; round++) {
+        double roundFrac = (double)round / (double)numRounds;
+        double learnRate = startLearnRate + roundFrac * (endLearnRate - startLearnRate);
+
+        trainedAgent->SetLearnRate(learnRate);
+        trainedAgent->SetTemperature(startRandomness);// * (1.0 - roundFrac));
+
+        trainingRound(trainedAgent.get(), opponent.get());
+      }
     }
 
     trainedAgent->SetTemperature(0.0);
@@ -46,10 +53,10 @@ struct Trainer::TrainerImpl {
   }
 
 private:
-  void trainingRound(LearningAgent *agent0, LearningAgent *agent1) {
+  void trainingRound(LearningAgent *learner, Agent *opponent) {
     GameRules *rules = GameRules::instance();
 
-    vector<LearningAgent *> players{agent0, agent1};
+    vector<Agent *> players{learner, opponent};
     unsigned curIndex = rand() % players.size();
 
     uptr<State> gameState = rules->InitialState();
@@ -57,8 +64,8 @@ private:
 
     unsigned turns = 0;
     while (true) {
-      LearningAgent *curPlayer = players[curIndex];
-      LearningAgent *otherPlayer = players[(curIndex + 1) % players.size()];
+      Agent *curPlayer = players[curIndex];
+      Agent *otherPlayer = players[(curIndex + 1) % players.size()];
 
       uptr<Action> action = curPlayer->ChooseAction(gameState.get());
       uptr<State> actionApplied = gameState->SuccessorState(*action);
@@ -72,20 +79,25 @@ private:
       if (prevPerformed.first.get() != nullptr) {
         assert(prevPerformed.second != nullptr);
 
-        double opponentReward = 1.0;
+        double opponentReward = 0.0;
         if (isWin) {
           opponentReward = lossReward;
         } else if (isFinished) {
           opponentReward = drawReward;
         }
 
-        rewardAgent(otherPlayer, prevPerformed.first.get(), prevPerformed.second.get(),
-                    successor.get(), opponentReward);
+        if (otherPlayer == learner) {
+          rewardAgent(learner, prevPerformed.first.get(), prevPerformed.second.get(),
+                      successor.get(), opponentReward);
+        }
       }
 
       if (isWin || isFinished) {
         double myReward = isWin ? winReward : drawReward;
-        rewardAgent(curPlayer, gameState.get(), action.get(), actionApplied.get(), myReward);
+
+        if (curPlayer == learner) {
+          rewardAgent(learner, gameState.get(), action.get(), actionApplied.get(), myReward);
+        }
 
         break;
       }
