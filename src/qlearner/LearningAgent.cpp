@@ -66,9 +66,10 @@ struct LearningAgent::LearningAgentImpl {
     assert(curValue != nullptr);
 
     double newQ = reward + futureDiscount * maxQ(resultState);
-    cout << "r: " << reward << " fd: " << futureDiscount << " newQ: " << newQ << endl;
+    // cout << "r: " << reward << " fd: " << futureDiscount << " newQ: " << newQ << endl;
     curValue->value += learnRate * (newQ - curValue->value);
-    cout << "v : " << curValue->value << endl;
+    // cout << "v : " << curValue->value << endl;
+    // getchar();
   }
 
 private:
@@ -101,7 +102,7 @@ private:
       return chooseGreedy(state);
     } else {
       auto &sas = stateActions[state];
-      return sas[rand()%sas.size()]->action->Clone();
+      return sas[rand() % sas.size()]->action->Clone();
     }
   }
 
@@ -160,6 +161,4 @@ void LearningAgent::SetLearnRate(double learnRate) {
   impl->learnRate = learnRate;
 }
 
-void LearningAgent::SetTemperature(double t) {
-  impl->temperature = t;
-}
+void LearningAgent::SetTemperature(double t) { impl->temperature = t; }
