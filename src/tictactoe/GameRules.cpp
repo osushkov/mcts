@@ -116,11 +116,23 @@ private:
   }
 };
 
+static uptr<GameRules> gameRulesInstance;
+
+GameRules* GameRules::instance(void) {
+  if (gameRulesInstance == nullptr) {
+    gameRulesInstance = uptr<GameRules>(new GameRules(4));
+  }
+
+  return gameRulesInstance.get();
+}
+
 GameRules::GameRules(unsigned completionRun) : impl(new GameRulesImpl(completionRun)) {}
 
-GameRules::GameRules(const GameRules &other) : impl(new GameRulesImpl(other.impl->completionRun)) {}
-
 GameRules::~GameRules() = default;
+
+uptr<State> GameRules::InitialState(void) const {
+  return uptr<State>(GameState::NewEmptyGameState(4, 4));
+}
 
 bool GameRules::IsTerminalState(const State &state) const {
   auto gs = static_cast<const GameState *>(&state);

@@ -1,11 +1,14 @@
 
 #pragma once
 
+#include "Common.hpp"
 #include "State.hpp"
 
 class Rules {
 public:
   virtual ~Rules() = default;
+
+  virtual uptr<State> InitialState(void) const = 0;
 
   // Returns whether it is possible to continue playing.
   virtual bool IsTerminalState(const State &state) const = 0;

@@ -101,6 +101,7 @@ struct GameState::GameStateImpl {
   }
 };
 
+// TODO: this should probably return a uptr.
 GameState *GameState::NewEmptyGameState(unsigned width, unsigned height) {
   assert(width > 0 && height > 0);
 

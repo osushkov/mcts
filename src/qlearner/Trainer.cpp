@@ -11,7 +11,7 @@
 
 struct Trainer::TrainerImpl {
 
-  const unsigned numRounds = 1000000;
+  const unsigned numRounds = 10000;
 
   const double startLearnRate = 0.75;
   const double endLearnRate = 0.001;
@@ -22,9 +22,7 @@ struct Trainer::TrainerImpl {
   const double lossReward = -1.0;
   const double drawReward = 0.0;
 
-  const GameRules rules;
-
-  TrainerImpl() : rules(4) {}
+  TrainerImpl() = default;
 
   uptr<Agent> TrainAgent(void) {
     auto trainedAgent = make_unique<LearningAgent>(0.9);
@@ -49,11 +47,12 @@ struct Trainer::TrainerImpl {
 
 private:
   void trainingRound(LearningAgent *agent0, LearningAgent *agent1) {
+    GameRules *rules = GameRules::instance();
+
     vector<LearningAgent *> players{agent0, agent1};
     unsigned curIndex = rand() % players.size();
 
-    // TODO: take in a factory that creates a new empty state.
-    uptr<State> gameState(GameState::NewEmptyGameState(4, 4));
+    uptr<State> gameState = rules->InitialState();
     pair<uptr<State>, uptr<Action>> prevPerformed(nullptr, nullptr);
 
     unsigned turns = 0;
@@ -67,8 +66,8 @@ private:
       uptr<State> successor = actionApplied->Clone();
       static_cast<GameState *>(successor.get())->FlipState(); // TODO: this is a bit hacky.
 
-      bool isWin = rules.IsWin(*actionApplied);
-      bool isFinished = rules.IsTerminalState(*actionApplied);
+      bool isWin = rules->IsWin(*actionApplied);
+      bool isFinished = rules->IsTerminalState(*actionApplied);
 
       if (prevPerformed.first.get() != nullptr) {
         assert(prevPerformed.second != nullptr);

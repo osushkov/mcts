@@ -11,7 +11,7 @@ using ActionUtility = pair<Action *, double>;
 // Monte-Carlo Tree Search.
 class MCTS {
 public:
-  MCTS(const GameRules &rules);
+  MCTS();
   virtual ~MCTS();
 
   // Sorted list of action utilities.

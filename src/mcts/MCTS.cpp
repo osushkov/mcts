@@ -3,13 +3,12 @@
 #include "Node.hpp"
 
 static const double P_RANDOM = 0.2;
-static const unsigned MC_ITER = 1000;
+static const unsigned MC_ITER = 10000;
 
 struct MCTS::MCTSImpl {
-  GameRules rules;
   uptr<Node> root;
 
-  MCTSImpl(const GameRules &rules) : rules(rules) {}
+  MCTSImpl() = default;
 
   // TODO: handle the fact that the lifetime of an action returned here has to be less than or
   // equal to the lifetime of the MCTS.
@@ -53,11 +52,13 @@ struct MCTS::MCTSImpl {
   }
 
   double playout(Node *startNode) {
+    GameRules* rules = GameRules::instance();
+
     unsigned curPlayerIndex = startNode->PlayerIndex();
     State *curState = startNode->GetState();
 
     vector<uptr<State>> playedStates;
-    while (!rules.IsTerminalState(*curState)) {
+    while (!rules->IsTerminalState(*curState)) {
       uptr<State> nextState = randomSuccessor(curState);
       curPlayerIndex = 1 - curPlayerIndex;
 
@@ -70,9 +71,9 @@ struct MCTS::MCTSImpl {
     // the startNode.
     double utilFlip = startNode->PlayerIndex() == curPlayerIndex ? 1.0 : -1.0;
 
-    if (rules.IsWin(*curState)) {
+    if (rules->IsWin(*curState)) {
       return 1.0 * utilFlip;
-    } else if (rules.IsLoss(*curState)) {
+    } else if (rules->IsLoss(*curState)) {
       return -1.0 * utilFlip;
     } else {
       return 0.0;
@@ -92,7 +93,7 @@ struct MCTS::MCTSImpl {
   }
 };
 
-MCTS::MCTS(const GameRules &rules) : impl(new MCTSImpl(rules)) {}
+MCTS::MCTS() : impl(new MCTSImpl()) {}
 
 MCTS::~MCTS() = default;
 

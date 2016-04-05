@@ -5,7 +5,7 @@
 struct MCTSAgent::MCTSAgentImpl {
 
   uptr<Action> ChooseAction(State *state) {
-    MCTS mcts(GameRules(4)); // TODO: game rules should really be injected or a singleton.
+    MCTS mcts;
 
     vector<ActionUtility> actions = mcts.ComputeUtilities(state);
     return actions.front().first->Clone();
