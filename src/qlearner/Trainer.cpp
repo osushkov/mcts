@@ -26,7 +26,7 @@ struct Trainer::TrainerImpl {
 
   uptr<Agent> TrainAgent(void) {
     vector<uptr<LearningAgent>> agentsPool;
-    for (unsigned i = 0; i < 5; i++) {
+    for (unsigned i = 0; i < 3; i++) {
       agentsPool.emplace_back(new LearningAgent(0.9));
     }
 
@@ -86,7 +86,8 @@ private:
         } else if (isFinished) {
           opponentReward = drawReward;
         }
-
+        rewardAgent(curPlayer, prevPerformed.first.get(), prevPerformed.second.get(),
+                    successor.get(), opponentReward);
         rewardAgent(otherPlayer, prevPerformed.first.get(), prevPerformed.second.get(),
                     successor.get(), opponentReward);
       }
@@ -94,6 +95,7 @@ private:
       if (isWin || isFinished) {
         double myReward = isWin ? winReward : drawReward;
         rewardAgent(curPlayer, gameState.get(), action.get(), actionApplied.get(), myReward);
+        rewardAgent(otherPlayer, gameState.get(), action.get(), actionApplied.get(), myReward);
         break;
       }
 
