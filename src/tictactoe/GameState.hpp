@@ -18,7 +18,7 @@ public:
   unsigned Width(void) const;
   unsigned Height(void) const;
 
-  bool PlaceToken(unsigned x, unsigned y);
+  bool PlaceToken(unsigned x);
   CellState GetCell(unsigned x, unsigned y) const;
 
   // Whenever we make a move and want another agent to make a move, then we should "flip" the

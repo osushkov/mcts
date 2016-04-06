@@ -67,7 +67,10 @@ int main() {
   cout << "finished training" << endl;
 
   MCTSAgent mctsAgent;
-  playGameAgainst(&mctsAgent, trainedAgent.get());
+
+  for (unsigned i = 0; i < 5; i++) {
+    playGameAgainst(&mctsAgent, trainedAgent.get());
+  }
 
   cout << "finished" << endl;
 

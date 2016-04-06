@@ -19,10 +19,9 @@ uptr<Action> IOAgent::ChooseAction(State *state) {
   vector<uptr<Action>> available = state->AvailableActions();
 
   while (true) {
-    unsigned x, y;
+    unsigned x;
     cin >> x;
-    cin >> y;
-    auto pa = make_unique<GameAction>(x, y);
+    auto pa = make_unique<GameAction>(x);
 
     if (isActionInSet(pa.get(), available)) {
       pa->Output(cout);

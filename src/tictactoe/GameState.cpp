@@ -20,12 +20,18 @@ struct GameState::GameStateImpl {
 
   unsigned Height(void) const { return boardHeight; }
 
-  bool PlaceToken(unsigned x, unsigned y) {
-    assert(x < boardWidth && y < boardHeight);
-    assert(cells[x + y * boardWidth] == CellState::EMPTY);
+  bool PlaceToken(unsigned x) {
+    assert(x < boardWidth);
+    assert(isColumnFree(x));
 
-    cells[x + y * boardWidth] = CellState::MY_TOKEN;
-    return true;
+    for (unsigned y = 0; y < Height(); y++) {
+      if (GetCell(x, y) == CellState::EMPTY) {
+        cells[x + y * boardWidth] = CellState::MY_TOKEN;
+        return true;
+      }
+    }
+
+    return false;
   }
 
   CellState GetCell(unsigned x, unsigned y) const {
@@ -68,7 +74,7 @@ struct GameState::GameStateImpl {
   }
 
   void Output(std::ostream &out) const {
-    for (unsigned y = 0; y < boardHeight; y++) {
+    for (int y = boardHeight-1; y >= 0; y--) {
       for (unsigned x = 0; x < boardWidth; x++) {
         out << cells[x + y * boardWidth];
       }
@@ -79,14 +85,11 @@ struct GameState::GameStateImpl {
   vector<uptr<Action>> AvailableActions(void) const {
     vector<uptr<Action>> result;
 
-    for (unsigned y = 0; y < boardHeight; y++) {
       for (unsigned x = 0; x < boardWidth; x++) {
-        CellState cs = cells[x + y * boardWidth];
-        if (cs == CellState::EMPTY) {
-          result.push_back(make_unique<GameAction>(x, y));
+        if (isColumnFree(x)) {
+          result.push_back(make_unique<GameAction>(x));
         }
       }
-    }
 
     return result;
   }
@@ -98,6 +101,18 @@ struct GameState::GameStateImpl {
     ga.Apply(*result);
 
     return move(result);
+  }
+
+  bool isColumnFree(unsigned x) const {
+    assert(x < Width());
+
+    for (unsigned y = 0; y < Height(); y++) {
+      if (GetCell(x, y) == CellState::EMPTY) {
+        return true;
+      }
+    }
+
+    return false;
   }
 };
 
@@ -118,7 +133,7 @@ unsigned GameState::Width(void) const { return impl->Width(); }
 
 unsigned GameState::Height(void) const { return impl->Height(); }
 
-bool GameState::PlaceToken(unsigned x, unsigned y) { return impl->PlaceToken(x, y); }
+bool GameState::PlaceToken(unsigned x) { return impl->PlaceToken(x); }
 
 CellState GameState::GetCell(unsigned x, unsigned y) const { return impl->GetCell(x, y); }
 

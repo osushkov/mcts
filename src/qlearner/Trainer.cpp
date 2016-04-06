@@ -11,7 +11,7 @@
 
 struct Trainer::TrainerImpl {
 
-  const unsigned numRounds = 100000;
+  const unsigned numRounds = 1000000;
 
   const double startLearnRate = 0.5;
   const double endLearnRate = 0.001;
@@ -41,10 +41,10 @@ struct Trainer::TrainerImpl {
       double learnRate = startLearnRate + roundFrac * (endLearnRate - startLearnRate);
 
       agent0->SetLearnRate(learnRate);
-      agent0->SetTemperature(startRandomness); // * (1.0 - roundFrac));
+      agent0->SetTemperature(startRandomness * (1.0 - roundFrac));
 
       agent1->SetLearnRate(learnRate);
-      agent1->SetTemperature(startRandomness);
+      agent1->SetTemperature(startRandomness * (1.0 - roundFrac));
 
       trainingRound(agent0, agent1);
     }

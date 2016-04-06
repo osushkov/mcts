@@ -8,7 +8,7 @@
 
 class GameAction : public Action {
 public:
-  GameAction(unsigned x, unsigned y);
+  GameAction(unsigned x);
   virtual ~GameAction();
 
   void Apply(GameState &state) const;
