@@ -20,7 +20,7 @@ void playGameAgainst(Agent *agent0, Agent *agent1) {
   GameRules* rules = GameRules::instance();
 
   vector<Agent *> players{agent0, agent1};
-  unsigned curIndex = 0; // rand()%players.size();
+  unsigned curIndex = rand()%players.size();
 
   uptr<State> gameState = rules->InitialState();
 

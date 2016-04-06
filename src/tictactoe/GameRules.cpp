@@ -121,7 +121,7 @@ constexpr int dim = 4;
 
 GameRules* GameRules::instance(void) {
   if (gameRulesInstance == nullptr) {
-    gameRulesInstance = uptr<GameRules>(new GameRules(dim));
+    gameRulesInstance = uptr<GameRules>(new GameRules(4));
   }
 
   return gameRulesInstance.get();
@@ -132,7 +132,7 @@ GameRules::GameRules(unsigned completionRun) : impl(new GameRulesImpl(completion
 GameRules::~GameRules() = default;
 
 uptr<State> GameRules::InitialState(void) const {
-  return uptr<State>(GameState::NewEmptyGameState(dim, dim));
+  return uptr<State>(GameState::NewEmptyGameState(5, 5));
 }
 
 bool GameRules::IsTerminalState(const State &state) const {

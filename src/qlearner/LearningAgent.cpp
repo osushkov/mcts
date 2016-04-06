@@ -56,7 +56,9 @@ struct LearningAgent::LearningAgentImpl {
     State *resultState = outcome.first;
     double reward = outcome.second;
 
-    assert(haveSeenState(startState));
+    if (!haveSeenState(startState)) {
+      handleNewState(startState);
+    }
 
     if (!haveSeenState(resultState)) {
       handleNewState(resultState);
