@@ -10,3 +10,5 @@ the MCTS player.
 For now the idea is to have a very simple MCTS policy, later I'll extend it
 to have more sophisticated exploration/exploitation policies, and look into
 other features.
+
+Detailed writeup is available here: https://thevoid.ghost.io/monte-carlo-tree-search/
